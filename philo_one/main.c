@@ -6,7 +6,7 @@
 /*   By: jserrano <jserrano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/20 19:10:14 by jserrano          #+#    #+#             */
-/*   Updated: 2021/03/01 20:22:09 by jserrano         ###   ########.fr       */
+/*   Updated: 2021/03/02 20:38:04 by jserrano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,8 +95,8 @@ typedef	struct	s_philo
 	t_param			*param;
 	char			eating;
 	pthread_t		process;
-	pthread_mutex_t	right_fork;
 	struct s_philo	*left;
+	struct s_philo	*right;
 }				t_philo;
 
 typedef	struct	s_param
@@ -129,10 +129,9 @@ void	init(t_param *param, int argc, char **argv)
 		param->p[i].name = ft_itoa(i);
 		param->p[i].param = param;
 		param->p[i].eating = 0;
-		pthread_mutex_init(&(param->p[i].right_fork), NULL);
-		param->p[i].left = (!i) ? NULL : &param->p[i - 1];
+		param->p[i].left = (!i) ? &param->p[param->n - 1] : &param->p[i - 1];
+		param->p[i].right = (i == param->n - 1) ? &param->p[0] : &param->p[i + 1];
 	}
-	param->p[0].left = &param->p[param->n - 1];
 }
 
 void	show(t_param *param)
@@ -149,23 +148,25 @@ void	*start(void *arg)
 	t_philo *p;
 
 	p = arg;
-	pthread_mutex_lock(&p->param->check);
-	if (!p->eating && !p->left->eating)
+	while (1)
 	{
-		pthread_mutex_unlock(&p->param->check);
-		pthread_mutex_lock(&p->right_fork);
-		pthread_mutex_lock(&p->left->right_fork);
-		pthread_mutex_lock(&p->param->speak);
-		write(1, "number = ", 10);
-		write(1, p->name, ft_strlen(p->name));
-		write(1, "\n", 1);
-		usleep(2000000);
-		pthread_mutex_unlock(&p->param->speak);
-		pthread_mutex_unlock(&p->right_fork);
-		pthread_mutex_unlock(&p->left->right_fork);
+		pthread_mutex_lock(&p->param->check);
+		if (!p->left->eating && !p->right->eating)
+		{
+			p->eating = 1;
+			pthread_mutex_unlock(&p->param->check);
+			pthread_mutex_lock(&p->param->speak);
+			write(1, "number = ", 10);
+			write(1, p->name, ft_strlen(p->name));
+			write(1, "\n", 1);
+			//usleep(500000);
+			pthread_mutex_unlock(&p->param->speak);
+			p->eating = 0;
+			return NULL;
+		}
+		else
+			pthread_mutex_unlock(&p->param->check);
 	}
-	pthread_mutex_unlock(&p->param->check);
-	return NULL;
 }
 
 int		main(int argc, char **argv)
@@ -192,8 +193,5 @@ int		main(int argc, char **argv)
 	i = -1;
 	while (++i < param.n)
 		pthread_join(param.p[i].process, NULL);
-	i = -1;
-	while (++i < param.n)
-		pthread_mutex_destroy(&param.p[i].right_fork);
 	return 0;
 }
