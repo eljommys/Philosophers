@@ -6,7 +6,7 @@
 /*   By: jserrano <jserrano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/02/20 19:10:14 by jserrano          #+#    #+#             */
-/*   Updated: 2021/03/02 20:38:04 by jserrano         ###   ########.fr       */
+/*   Updated: 2021/03/03 21:04:05 by jserrano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -151,17 +151,32 @@ void	*start(void *arg)
 	while (1)
 	{
 		pthread_mutex_lock(&p->param->check);
+
+			write(1, "\nleft = ", 8);
+			write(1, p->left->name, ft_strlen(p->left->name));
+			write(1, "\teating = ", 10);
+			write(1, ft_itoa(p->left->eating), ft_strlen(ft_itoa(p->left->eating)));
+			write(1, "\n", 1);
+
+			write(1, "number = ", 9);
+			write(1, p->name, ft_strlen(p->name));
+			write(1, "\n", 1);
+
+			write(1, "right = ", 8);
+			write(1, p->right->name, ft_strlen(p->right->name));
+			write(1, "\teating = ", 10);
+			write(1, ft_itoa(p->right->eating), ft_strlen(ft_itoa(p->right->eating)));
+			write(1, "\n\n", 2);
+
 		if (!p->left->eating && !p->right->eating)
 		{
 			p->eating = 1;
 			pthread_mutex_unlock(&p->param->check);
 			pthread_mutex_lock(&p->param->speak);
-			write(1, "number = ", 10);
-			write(1, p->name, ft_strlen(p->name));
-			write(1, "\n", 1);
-			//usleep(500000);
-			pthread_mutex_unlock(&p->param->speak);
+			write(1, "\neaten\n\n", 8);
+			usleep(100000);
 			p->eating = 0;
+			pthread_mutex_unlock(&p->param->speak);
 			return NULL;
 		}
 		else
@@ -193,5 +208,6 @@ int		main(int argc, char **argv)
 	i = -1;
 	while (++i < param.n)
 		pthread_join(param.p[i].process, NULL);
+	
 	return 0;
 }
